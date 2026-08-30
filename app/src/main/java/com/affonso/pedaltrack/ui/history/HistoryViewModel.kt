@@ -15,13 +15,7 @@ data class HistoryUiState(val sessions: List<CyclingSessionRecord> = emptyList()
 class HistoryViewModel(private val repository: CyclingRepository) : ViewModel() {
     val uiState: StateFlow<HistoryUiState> = repository.observeHistory()
         .map { HistoryUiState(it) }
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), HistoryUiState())
-
-    init {
-        viewModelScope.launch {
-            uiState.collect {}
-        }
-    }
+        .stateIn(viewModelScope, SharingStarted.Eagerly, HistoryUiState())
 
     fun update(id: Long, km: Double, carga: String?) {
         viewModelScope.launch { repository.updateSession(id, km, carga) }
