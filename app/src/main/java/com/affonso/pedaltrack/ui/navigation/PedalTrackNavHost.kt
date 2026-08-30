@@ -11,6 +11,7 @@ import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -79,7 +80,17 @@ fun PedalTrackNavHost(repository: CyclingRepository) {
             composable(Destination.Log.route) {
                 val viewModel: LogSessionViewModel = viewModel(factory = factory)
                 val uiState by viewModel.uiState.collectAsState()
-                LogSessionScreen(uiState = uiState, onSubmit = viewModel::submit)
+                // Log is the NavHost's start destination, so its NavBackStackEntry (and this
+                // ViewModel) survives every bottom-nav tab switch and init{} only runs once.
+                // Re-fetch on every visit to this composable so a session deleted in Histórico,
+                // or a new workout synced from Health Connect, shows up without a cold restart.
+                LaunchedEffect(Unit) { viewModel.loadSessions() }
+                LogSessionScreen(
+                    uiState = uiState,
+                    onSubmit = viewModel::submit,
+                    onDismissWarning = viewModel::dismissWarning,
+                    onDismissError = viewModel::dismissError
+                )
             }
             composable(Destination.History.route) {
                 val viewModel: HistoryViewModel = viewModel(factory = factory)

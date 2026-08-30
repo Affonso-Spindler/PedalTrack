@@ -12,6 +12,7 @@ import com.affonso.pedaltrack.domain.SummaryPeriod
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import java.time.Instant
+import java.time.ZoneId
 import java.time.temporal.ChronoUnit
 
 data class LogResult(val healthConnectSynced: Boolean)
@@ -71,7 +72,7 @@ class CyclingRepositoryImpl(
 
     override suspend fun getSummary(period: SummaryPeriod): SummaryMetrics {
         val all = dao.getAll().map { it.toDomain() }
-        val filtered = SummaryCalculator.filterByPeriod(all, period, Instant.now())
+        val filtered = SummaryCalculator.filterByPeriod(all, period, Instant.now(), ZoneId.systemDefault())
         return SummaryCalculator.calculate(filtered)
     }
 }

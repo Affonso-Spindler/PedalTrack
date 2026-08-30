@@ -3,6 +3,7 @@ package com.affonso.pedaltrack.domain
 import org.junit.Assert.assertEquals
 import org.junit.Test
 import java.time.Instant
+import java.time.ZoneId
 
 class SummaryCalculatorTest {
 
@@ -52,16 +53,22 @@ class SummaryCalculatorTest {
     }
 
     @Test
-    fun `filterByPeriod keeps only sessions within the window`() {
-        val now = Instant.parse("2026-08-30T00:00:00Z")
+    fun `filterByPeriod keeps only sessions within the current calendar week and month`() {
+        // Fixed clock: Saturday 2026-08-15, 10:00 local time in America/Sao_Paulo (UTC-3, no DST).
+        // Current ISO week starts Monday 2026-08-10T00:00 local; current month starts 2026-08-01T00:00 local.
+        val zone = ZoneId.of("America/Sao_Paulo")
+        val now = Instant.parse("2026-08-15T13:00:00Z")
         val sessions = listOf(
-            record(1, now.minusSeconds(3 * 86400), km = 10.0, calories = 100.0, durationMin = 30),
-            record(2, now.minusSeconds(20 * 86400), km = 10.0, calories = 100.0, durationMin = 30),
-            record(3, now.minusSeconds(40 * 86400), km = 10.0, calories = 100.0, durationMin = 30)
+            // Wednesday 2026-08-12, within the current week and month.
+            record(1, Instant.parse("2026-08-12T12:00:00Z"), km = 10.0, calories = 100.0, durationMin = 30),
+            // 2026-08-05, before the current week's Monday start but within the current month.
+            record(2, Instant.parse("2026-08-05T12:00:00Z"), km = 10.0, calories = 100.0, durationMin = 30),
+            // 2026-07-20, in the previous calendar month entirely.
+            record(3, Instant.parse("2026-07-20T12:00:00Z"), km = 10.0, calories = 100.0, durationMin = 30)
         )
 
-        assertEquals(listOf(1L), SummaryCalculator.filterByPeriod(sessions, SummaryPeriod.WEEK, now).map { it.id })
-        assertEquals(listOf(1L, 2L), SummaryCalculator.filterByPeriod(sessions, SummaryPeriod.MONTH, now).map { it.id })
-        assertEquals(listOf(1L, 2L, 3L), SummaryCalculator.filterByPeriod(sessions, SummaryPeriod.ALL, now).map { it.id })
+        assertEquals(listOf(1L), SummaryCalculator.filterByPeriod(sessions, SummaryPeriod.WEEK, now, zone).map { it.id })
+        assertEquals(listOf(1L, 2L), SummaryCalculator.filterByPeriod(sessions, SummaryPeriod.MONTH, now, zone).map { it.id })
+        assertEquals(listOf(1L, 2L, 3L), SummaryCalculator.filterByPeriod(sessions, SummaryPeriod.ALL, now, zone).map { it.id })
     }
 }

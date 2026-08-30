@@ -1,7 +1,8 @@
 package com.affonso.pedaltrack.domain
 
+import java.time.DayOfWeek
 import java.time.Instant
-import java.time.temporal.ChronoUnit
+import java.time.ZoneId
 
 object SummaryCalculator {
 
@@ -22,10 +23,17 @@ object SummaryCalculator {
     fun filterByPeriod(
         sessions: List<CyclingSessionRecord>,
         period: SummaryPeriod,
-        now: Instant
+        now: Instant,
+        zone: ZoneId
     ): List<CyclingSessionRecord> = when (period) {
         SummaryPeriod.ALL -> sessions
-        SummaryPeriod.WEEK -> sessions.filter { it.startTime >= now.minus(7, ChronoUnit.DAYS) }
-        SummaryPeriod.MONTH -> sessions.filter { it.startTime >= now.minus(30, ChronoUnit.DAYS) }
+        SummaryPeriod.WEEK -> {
+            val weekStart = now.atZone(zone).toLocalDate().with(DayOfWeek.MONDAY).atStartOfDay(zone).toInstant()
+            sessions.filter { it.startTime >= weekStart }
+        }
+        SummaryPeriod.MONTH -> {
+            val monthStart = now.atZone(zone).toLocalDate().withDayOfMonth(1).atStartOfDay(zone).toInstant()
+            sessions.filter { it.startTime >= monthStart }
+        }
     }
 }

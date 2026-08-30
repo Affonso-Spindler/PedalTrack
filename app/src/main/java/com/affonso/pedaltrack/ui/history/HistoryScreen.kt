@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.Button
@@ -21,6 +22,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.affonso.pedaltrack.domain.CyclingSessionRecord
 import java.time.ZoneId
@@ -63,6 +65,10 @@ fun HistoryScreen(
                     Column(modifier = Modifier.weight(1f)) {
                         Text(formatter.format(session.startTime))
                         Text("${session.km} km · ${session.durationMin} min")
+                        Text(
+                            "Calorias: ${session.calories?.let { "%.0f".format(it) } ?: "—"} · " +
+                                "FC média: ${session.avgHeartRate?.toString() ?: "—"} bpm"
+                        )
                         session.carga?.let { Text("Carga: $it") }
                     }
                     IconButton(onClick = { onDelete(session.id) }) {
@@ -82,13 +88,17 @@ private fun EditSessionForm(
 ) {
     var km by remember { mutableStateOf(session.km.toString()) }
     var carga by remember { mutableStateOf(session.carga.orEmpty()) }
+    var kmError by remember { mutableStateOf(false) }
 
     Column(Modifier.fillMaxSize().padding(16.dp)) {
         Text("Editar sessão")
         OutlinedTextField(
             value = km,
-            onValueChange = { km = it },
+            onValueChange = { km = it; kmError = false },
             label = { Text("Km") },
+            isError = kmError,
+            supportingText = { if (kmError) Text("Km inválido") },
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
             modifier = Modifier.fillMaxWidth().padding(top = 16.dp)
         )
         OutlinedTextField(
@@ -98,7 +108,14 @@ private fun EditSessionForm(
             modifier = Modifier.fillMaxWidth().padding(top = 8.dp)
         )
         Button(
-            onClick = { km.toDoubleOrNull()?.let { onConfirm(it, carga.ifBlank { null }) } },
+            onClick = {
+                val parsedKm = km.replace(',', '.').toDoubleOrNull()
+                if (parsedKm == null) {
+                    kmError = true
+                } else {
+                    onConfirm(parsedKm, carga.ifBlank { null })
+                }
+            },
             modifier = Modifier.padding(top = 16.dp)
         ) { Text("Salvar") }
         Button(onClick = onCancel, modifier = Modifier.padding(top = 8.dp)) { Text("Cancelar") }

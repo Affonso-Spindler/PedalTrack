@@ -61,6 +61,11 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
+
+    override fun onResume() {
+        super.onResume()
+        lifecycleScope.launch { permissionsGranted = healthConnectManager.hasAllPermissions() }
+    }
 }
 
 @Composable

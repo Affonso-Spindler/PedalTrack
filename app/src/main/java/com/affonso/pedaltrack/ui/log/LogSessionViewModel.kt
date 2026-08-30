@@ -50,4 +50,12 @@ class LogSessionViewModel(private val repository: CyclingRepository) : ViewModel
                 .onFailure { e -> _uiState.value = _uiState.value.copy(error = e.message) }
         }
     }
+
+    fun dismissWarning() {
+        _uiState.value = _uiState.value.copy(syncWarning = null)
+    }
+
+    fun dismissError() {
+        _uiState.value = _uiState.value.copy(error = null)
+    }
 }
