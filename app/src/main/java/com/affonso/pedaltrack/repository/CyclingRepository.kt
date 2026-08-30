@@ -37,7 +37,7 @@ class CyclingRepositoryImpl(
         return SessionFilter.loggable(hcSessions, loggedIds)
     }
 
-    override suspend fun logSession(session: HealthConnectSession, km: Double, carga: String?): Result<LogResult> =
+    override suspend fun logSession(session: HealthConnectSession, km: Double, carga: String?): Result<LogResult> {
         try {
             dao.insert(
                 CyclingSessionEntity(
@@ -52,11 +52,12 @@ class CyclingRepositoryImpl(
                     createdAt = Instant.now()
                 )
             )
-            val syncResult = healthConnectManager.writeDistanceRecord(session.startTime, session.endTime, km)
-            Result.success(LogResult(healthConnectSynced = syncResult.isSuccess))
         } catch (e: Exception) {
-            Result.failure(e)
+            return Result.failure(e)
         }
+        val syncResult = healthConnectManager.writeDistanceRecord(session.startTime, session.endTime, km)
+        return Result.success(LogResult(healthConnectSynced = syncResult.isSuccess))
+    }
 
     override fun observeHistory(): Flow<List<CyclingSessionRecord>> =
         dao.observeAll().map { entities -> entities.map { it.toDomain() } }
