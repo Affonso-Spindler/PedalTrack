@@ -7,3 +7,5 @@ build/
 captures/
 .cxx/
 .claude/
+.superpowers/
+/samsung-health-data-sdk-1.1.0/

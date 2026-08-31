@@ -124,4 +124,29 @@ class CyclingRepositoryTest {
         assertEquals(20.0, summary.totalKm, 0.001)
         assertEquals(1, summary.sessionCount)
     }
+
+    @Test
+    fun `getSessionsInPeriod returns the raw sessions for the selected period`() = runBlocking {
+        val dao = FakeDao()
+        val now = Instant.now()
+        dao.insert(
+            CyclingSessionEntity(
+                healthConnectSessionId = "hc-1",
+                startTime = now.minusSeconds(3600),
+                endTime = now,
+                durationMin = 60,
+                calories = 400.0,
+                avgHeartRate = 140,
+                km = 20.0,
+                carga = null,
+                createdAt = now
+            )
+        )
+        val repository = CyclingRepositoryImpl(dao, FakeHealthConnectManager())
+
+        val sessions = repository.getSessionsInPeriod(SummaryPeriod.ALL)
+
+        assertEquals(1, sessions.size)
+        assertEquals(20.0, sessions[0].km, 0.001)
+    }
 }

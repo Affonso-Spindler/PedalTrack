@@ -34,7 +34,8 @@ private class FakeCyclingRepository(
     override fun observeHistory(): Flow<List<CyclingSessionRecord>> = flowOf(emptyList())
     override suspend fun updateSession(id: Long, km: Double, carga: String?) {}
     override suspend fun deleteSession(id: Long) {}
-    override suspend fun getSummary(period: SummaryPeriod): SummaryMetrics = SummaryMetrics(0.0, 0.0, 0.0, 0.0, 0)
+    override suspend fun getSummary(period: SummaryPeriod, offset: Int): SummaryMetrics = SummaryMetrics(0.0, 0.0, 0.0, 0.0, 0, 0.0)
+    override suspend fun getSessionsInPeriod(period: SummaryPeriod, offset: Int): List<CyclingSessionRecord> = emptyList()
 }
 
 @OptIn(ExperimentalCoroutinesApi::class)

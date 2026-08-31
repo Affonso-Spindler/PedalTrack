@@ -21,7 +21,8 @@ interface CyclingRepository {
     fun observeHistory(): Flow<List<CyclingSessionRecord>>
     suspend fun updateSession(id: Long, km: Double, carga: String?)
     suspend fun deleteSession(id: Long)
-    suspend fun getSummary(period: SummaryPeriod): SummaryMetrics
+    suspend fun getSummary(period: SummaryPeriod, offset: Int = 0): SummaryMetrics
+    suspend fun getSessionsInPeriod(period: SummaryPeriod, offset: Int = 0): List<CyclingSessionRecord>
 }
 
 class CyclingRepositoryImpl(
@@ -66,10 +67,12 @@ class CyclingRepositoryImpl(
 
     override suspend fun deleteSession(id: Long) = dao.deleteById(id)
 
-    override suspend fun getSummary(period: SummaryPeriod): SummaryMetrics {
+    override suspend fun getSummary(period: SummaryPeriod, offset: Int): SummaryMetrics =
+        SummaryCalculator.calculate(getSessionsInPeriod(period, offset))
+
+    override suspend fun getSessionsInPeriod(period: SummaryPeriod, offset: Int): List<CyclingSessionRecord> {
         val all = dao.getAll().map { it.toDomain() }
-        val filtered = SummaryCalculator.filterByPeriod(all, period, Instant.now(), ZoneId.systemDefault())
-        return SummaryCalculator.calculate(filtered)
+        return SummaryCalculator.filterByPeriod(all, period, Instant.now(), ZoneId.systemDefault(), offset)
     }
 }
 

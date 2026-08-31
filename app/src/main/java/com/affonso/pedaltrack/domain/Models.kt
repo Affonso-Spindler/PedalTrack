@@ -29,7 +29,8 @@ data class SummaryMetrics(
     val avgKmPerSession: Double,
     val totalCalories: Double,
     val avgDurationMin: Double,
-    val sessionCount: Int
+    val sessionCount: Int,
+    val avgCaloriesPerSession: Double
 )
 
 enum class SummaryPeriod { WEEK, MONTH, ALL }

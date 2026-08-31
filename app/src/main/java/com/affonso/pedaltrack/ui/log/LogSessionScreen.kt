@@ -1,19 +1,28 @@
+@file:OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
+
 package com.affonso.pedaltrack.ui.log
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -21,9 +30,16 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.affonso.pedaltrack.domain.HealthConnectSession
+import com.affonso.pedaltrack.ui.common.GradientBadge
+import com.affonso.pedaltrack.ui.common.InfoChip
+import com.affonso.pedaltrack.ui.common.caloriesChipTint
+import com.affonso.pedaltrack.ui.common.heartRateChipTint
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 
@@ -89,15 +105,44 @@ fun LogSessionScreen(
 
 @Composable
 private fun SessionCard(session: HealthConnectSession, onClick: () -> Unit) {
-    val formatter = remember { DateTimeFormatter.ofPattern("dd/MM HH:mm").withZone(ZoneId.systemDefault()) }
-    Card(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp), onClick = onClick) {
-        Column(Modifier.padding(12.dp)) {
-            Text(formatter.format(session.startTime))
-            Text("${session.durationMin} min")
-            Text(
-                "Calorias: ${session.calories?.let { "%.0f".format(it) } ?: "—"} · " +
-                    "FC média: ${session.avgHeartRate?.toString() ?: "—"} bpm"
-            )
+    val formatter = remember { DateTimeFormatter.ofPattern("dd/MM · HH:mm").withZone(ZoneId.systemDefault()) }
+    Card(
+        modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+        onClick = onClick,
+        shape = RoundedCornerShape(16.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+    ) {
+        Row(
+            Modifier.padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            GradientBadge()
+            Column(Modifier.weight(1f).padding(start = 14.dp)) {
+                Row(
+                    Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.Bottom
+                ) {
+                    Text(
+                        "${session.durationMin} min",
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Text(
+                        formatter.format(session.startTime),
+                        fontSize = 12.sp,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+                FlowRow(
+                    modifier = Modifier.padding(top = 8.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    InfoChip("🔥 ${session.calories?.let { "%.0f".format(it) } ?: "—"} kcal", caloriesChipTint())
+                    InfoChip("♥ ${session.avgHeartRate?.toString() ?: "—"} bpm", heartRateChipTint())
+                }
+            }
         }
     }
 }
@@ -111,23 +156,55 @@ private fun LogSessionForm(
     var km by remember { mutableStateOf("") }
     var carga by remember { mutableStateOf("") }
     var kmError by remember { mutableStateOf(false) }
+    val formatter = remember { DateTimeFormatter.ofPattern("dd/MM · HH:mm").withZone(ZoneId.systemDefault()) }
 
     Column(Modifier.fillMaxSize().padding(16.dp)) {
-        Text("Sessão de ${session.durationMin} min")
+        TextButton(onClick = onCancel, modifier = Modifier.offset(x = (-8).dp)) {
+            Text("← Cancelar")
+        }
+
+        Card(
+            modifier = Modifier.fillMaxWidth().padding(top = 4.dp, bottom = 20.dp),
+            shape = RoundedCornerShape(16.dp),
+            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        ) {
+            Row(Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
+                GradientBadge()
+                Column(Modifier.weight(1f).padding(start = 14.dp)) {
+                    Text(
+                        formatter.format(session.startTime),
+                        fontSize = 12.sp,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Text("${session.durationMin} min", fontSize = 20.sp, fontWeight = FontWeight.Bold)
+                    FlowRow(
+                        modifier = Modifier.padding(top = 8.dp),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        InfoChip("🔥 ${session.calories?.let { "%.0f".format(it) } ?: "—"} kcal", caloriesChipTint())
+                        InfoChip("♥ ${session.avgHeartRate?.toString() ?: "—"} bpm", heartRateChipTint())
+                    }
+                }
+            }
+        }
+
+        Text("Km rodado", fontWeight = FontWeight.SemiBold, modifier = Modifier.padding(bottom = 4.dp))
         OutlinedTextField(
             value = km,
             onValueChange = { km = it; kmError = false },
-            label = { Text("Km") },
+            placeholder = { Text("0,0") },
             isError = kmError,
             supportingText = { if (kmError) Text("Km inválido") },
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-            modifier = Modifier.fillMaxWidth().padding(top = 16.dp)
+            textStyle = TextStyle(fontSize = 20.sp, fontWeight = FontWeight.Bold),
+            modifier = Modifier.fillMaxWidth()
         )
         OutlinedTextField(
             value = carga,
             onValueChange = { carga = it },
             label = { Text("Carga (opcional)") },
-            modifier = Modifier.fillMaxWidth().padding(top = 8.dp)
+            modifier = Modifier.fillMaxWidth().padding(top = 16.dp)
         )
         Button(
             onClick = {
@@ -138,8 +215,8 @@ private fun LogSessionForm(
                     onConfirm(parsedKm, carga.ifBlank { null })
                 }
             },
-            modifier = Modifier.padding(top = 16.dp)
-        ) { Text("Salvar") }
-        Button(onClick = onCancel, modifier = Modifier.padding(top = 8.dp)) { Text("Cancelar") }
+            modifier = Modifier.fillMaxWidth().padding(top = 24.dp).height(52.dp),
+            shape = RoundedCornerShape(14.dp)
+        ) { Text("Salvar", fontSize = 16.sp) }
     }
 }

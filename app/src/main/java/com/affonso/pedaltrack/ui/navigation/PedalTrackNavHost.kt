@@ -99,7 +99,12 @@ fun PedalTrackNavHost(repository: CyclingRepository) {
             composable(Destination.Summary.route) {
                 val viewModel: SummaryViewModel = viewModel(factory = factory)
                 val uiState by viewModel.uiState.collectAsState()
-                SummaryScreen(uiState = uiState, onPeriodChange = viewModel::setPeriod)
+                SummaryScreen(
+                    uiState = uiState,
+                    onPeriodChange = viewModel::setPeriod,
+                    onNavigatePrevious = viewModel::navigatePrevious,
+                    onNavigateNext = viewModel::navigateNext
+                )
             }
         }
     }
