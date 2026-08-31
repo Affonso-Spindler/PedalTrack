@@ -11,14 +11,18 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
@@ -30,16 +34,22 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.affonso.pedaltrack.domain.HealthConnectSession
 import com.affonso.pedaltrack.ui.common.GradientBadge
 import com.affonso.pedaltrack.ui.common.InfoChip
+import com.affonso.pedaltrack.ui.common.applyDigitEdit
 import com.affonso.pedaltrack.ui.common.caloriesChipTint
+import com.affonso.pedaltrack.ui.common.formatKmDigits
 import com.affonso.pedaltrack.ui.common.heartRateChipTint
+import com.affonso.pedaltrack.ui.common.kmDigitsToDouble
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 
@@ -153,14 +163,15 @@ private fun LogSessionForm(
     onCancel: () -> Unit,
     onConfirm: (Double, String?) -> Unit
 ) {
-    var km by remember { mutableStateOf("") }
+    var kmDigits by remember { mutableStateOf("") }
     var carga by remember { mutableStateOf("") }
     var kmError by remember { mutableStateOf(false) }
     val formatter = remember { DateTimeFormatter.ofPattern("dd/MM · HH:mm").withZone(ZoneId.systemDefault()) }
 
     Column(Modifier.fillMaxSize().padding(16.dp)) {
         TextButton(onClick = onCancel, modifier = Modifier.offset(x = (-8).dp)) {
-            Text("← Cancelar")
+            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = null, modifier = Modifier.size(20.dp))
+            Text("Cancelar", fontSize = 16.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.padding(start = 6.dp))
         }
 
         Card(
@@ -190,13 +201,14 @@ private fun LogSessionForm(
         }
 
         Text("Km rodado", fontWeight = FontWeight.SemiBold, modifier = Modifier.padding(bottom = 4.dp))
+        val kmDisplay = formatKmDigits(kmDigits)
         OutlinedTextField(
-            value = km,
-            onValueChange = { km = it; kmError = false },
+            value = TextFieldValue(kmDisplay, TextRange(kmDisplay.length)),
+            onValueChange = { field -> kmDigits = applyDigitEdit(kmDigits, field.text); kmError = false },
             placeholder = { Text("0,0") },
             isError = kmError,
             supportingText = { if (kmError) Text("Km inválido") },
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number, imeAction = ImeAction.Done),
             textStyle = TextStyle(fontSize = 20.sp, fontWeight = FontWeight.Bold),
             modifier = Modifier.fillMaxWidth()
         )
@@ -208,7 +220,7 @@ private fun LogSessionForm(
         )
         Button(
             onClick = {
-                val parsedKm = km.replace(',', '.').toDoubleOrNull()
+                val parsedKm = kmDigitsToDouble(kmDigits)
                 if (parsedKm == null) {
                     kmError = true
                 } else {
