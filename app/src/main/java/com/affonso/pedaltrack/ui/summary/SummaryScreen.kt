@@ -118,22 +118,20 @@ fun SummaryScreen(
                 valueColor = MaterialTheme.colorScheme.primary,
                 modifier = Modifier.weight(1f)
             )
-        }
-        Row(Modifier.padding(top = 10.dp), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
             StatCard(
                 value = "%.0f".format(uiState.metrics.totalCalories),
                 label = "calorias totais",
                 valueColor = MaterialTheme.colorScheme.tertiary,
                 modifier = Modifier.weight(1f)
             )
+        }
+        Row(Modifier.padding(top = 10.dp), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
             StatCard(
                 value = "%.0f".format(uiState.metrics.avgDurationMin),
                 label = "min médio",
                 valueColor = MaterialTheme.colorScheme.secondary,
                 modifier = Modifier.weight(1f)
             )
-        }
-        Row(Modifier.padding(top = 10.dp), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
             StatCard(
                 value = "%.1f".format(uiState.metrics.avgKmPerSession),
                 label = "km médio",
