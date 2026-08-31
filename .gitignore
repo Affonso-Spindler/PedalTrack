@@ -9,3 +9,4 @@ captures/
 .claude/
 .superpowers/
 /samsung-health-data-sdk-1.1.0/
+app/libs/*.aar
