@@ -15,11 +15,9 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import androidx.health.connect.client.HealthConnectClient
-import androidx.health.connect.client.PermissionController
 import androidx.lifecycle.lifecycleScope
-import com.affonso.pedaltrack.data.healthconnect.HealthConnectManagerImpl
 import com.affonso.pedaltrack.data.local.PedalTrackDatabase
+import com.affonso.pedaltrack.data.samsunghealth.SamsungHealthManagerImpl
 import com.affonso.pedaltrack.repository.CyclingRepositoryImpl
 import com.affonso.pedaltrack.ui.navigation.PedalTrackNavHost
 import com.affonso.pedaltrack.ui.theme.PedalTrackTheme
@@ -27,21 +25,14 @@ import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
 
-    private lateinit var healthConnectManager: HealthConnectManagerImpl
+    private lateinit var healthConnectManager: SamsungHealthManagerImpl
     private lateinit var repository: CyclingRepositoryImpl
     private var permissionsGranted by mutableStateOf<Boolean?>(null)
-
-    private val requestPermissions = registerForActivityResult(
-        PermissionController.createRequestPermissionResultContract()
-    ) {
-        lifecycleScope.launch { permissionsGranted = healthConnectManager.hasAllPermissions() }
-    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        val client = HealthConnectClient.getOrCreate(applicationContext)
-        healthConnectManager = HealthConnectManagerImpl(client)
+        healthConnectManager = SamsungHealthManagerImpl(applicationContext)
         val dao = PedalTrackDatabase.getInstance(applicationContext).cyclingSessionDao()
         repository = CyclingRepositoryImpl(dao, healthConnectManager)
 
@@ -53,7 +44,11 @@ class MainActivity : ComponentActivity() {
                     when (permissionsGranted) {
                         true -> PedalTrackNavHost(repository = repository)
                         false -> PermissionRequestScreen(
-                            onRequestClick = { requestPermissions.launch(healthConnectManager.permissions()) }
+                            onRequestClick = {
+                                lifecycleScope.launch {
+                                    permissionsGranted = healthConnectManager.requestPermissions(this@MainActivity)
+                                }
+                            }
                         )
                         null -> {}
                     }
@@ -71,7 +66,7 @@ class MainActivity : ComponentActivity() {
 @Composable
 private fun PermissionRequestScreen(onRequestClick: () -> Unit) {
     Column(Modifier.fillMaxSize().padding(24.dp)) {
-        Text("PedalTrack precisa de permissão para ler seus treinos de bike indoor e escrever a distância no Health Connect.")
+        Text("PedalTrack precisa de permissão para ler seus treinos de bike indoor no Samsung Health.")
         Button(onClick = onRequestClick, modifier = Modifier.padding(top = 16.dp)) {
             Text("Conceder permissão")
         }

@@ -1,8 +1,8 @@
 package com.affonso.pedaltrack.repository
 
-import com.affonso.pedaltrack.data.healthconnect.HealthConnectManager
 import com.affonso.pedaltrack.data.local.CyclingSessionDao
 import com.affonso.pedaltrack.data.local.CyclingSessionEntity
+import com.affonso.pedaltrack.data.samsunghealth.HealthConnectManager
 import com.affonso.pedaltrack.domain.HealthConnectSession
 import com.affonso.pedaltrack.domain.SummaryPeriod
 import kotlinx.coroutines.flow.Flow
@@ -11,6 +11,7 @@ import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import android.app.Activity
 import java.time.Instant
 
 private class FakeDao : CyclingSessionDao {
@@ -46,14 +47,11 @@ private class FakeDao : CyclingSessionDao {
 }
 
 private class FakeHealthConnectManager(
-    private val sessionsToReturn: List<HealthConnectSession> = emptyList(),
-    private val writeShouldFail: Boolean = false
+    private val sessionsToReturn: List<HealthConnectSession> = emptyList()
 ) : HealthConnectManager {
-    override fun permissions(): Set<String> = emptySet()
     override suspend fun hasAllPermissions(): Boolean = true
+    override suspend fun requestPermissions(activity: Activity): Boolean = true
     override suspend fun readRecentStationaryBikeSessions(since: Instant): List<HealthConnectSession> = sessionsToReturn
-    override suspend fun writeDistanceRecord(startTime: Instant, endTime: Instant, km: Double): Result<Unit> =
-        if (writeShouldFail) Result.failure(RuntimeException("sync failed")) else Result.success(Unit)
 }
 
 class CyclingRepositoryTest {
@@ -91,14 +89,13 @@ class CyclingRepositoryTest {
     }
 
     @Test
-    fun `logSession saves locally even when Health Connect write fails`() = runBlocking {
+    fun `logSession saves the session locally`() = runBlocking {
         val dao = FakeDao()
-        val repository = CyclingRepositoryImpl(dao, FakeHealthConnectManager(writeShouldFail = true))
+        val repository = CyclingRepositoryImpl(dao, FakeHealthConnectManager())
 
         val result = repository.logSession(sampleSession, km = 12.5, carga = "media")
 
         assertTrue(result.isSuccess)
-        assertEquals(false, result.getOrNull()?.healthConnectSynced)
         assertEquals(1, dao.sessions.size)
         assertEquals(12.5, dao.sessions[0].km, 0.001)
     }

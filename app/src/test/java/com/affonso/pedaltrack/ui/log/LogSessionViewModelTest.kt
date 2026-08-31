@@ -5,7 +5,6 @@ import com.affonso.pedaltrack.domain.HealthConnectSession
 import com.affonso.pedaltrack.domain.SummaryMetrics
 import com.affonso.pedaltrack.domain.SummaryPeriod
 import com.affonso.pedaltrack.repository.CyclingRepository
-import com.affonso.pedaltrack.repository.LogResult
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
@@ -23,12 +22,12 @@ import java.time.Instant
 
 private class FakeCyclingRepository(
     private val loggableSessions: List<HealthConnectSession> = emptyList(),
-    private val logResult: Result<LogResult> = Result.success(LogResult(true))
+    private val logResult: Result<Unit> = Result.success(Unit)
 ) : CyclingRepository {
     var loggedKm: Double? = null
 
     override suspend fun getLoggableSessions(): List<HealthConnectSession> = loggableSessions
-    override suspend fun logSession(session: HealthConnectSession, km: Double, carga: String?): Result<LogResult> {
+    override suspend fun logSession(session: HealthConnectSession, km: Double, carga: String?): Result<Unit> {
         loggedKm = km
         return logResult
     }
@@ -68,11 +67,8 @@ class LogSessionViewModelTest {
     }
 
     @Test
-    fun `submit shows warning when Health Connect sync fails`() = runTest {
-        val repository = FakeCyclingRepository(
-            loggableSessions = listOf(sampleSession),
-            logResult = Result.success(LogResult(healthConnectSynced = false))
-        )
+    fun `submit logs the session with the entered km`() = runTest {
+        val repository = FakeCyclingRepository(loggableSessions = listOf(sampleSession))
         val viewModel = LogSessionViewModel(repository)
         dispatcher.scheduler.advanceUntilIdle()
 
@@ -80,6 +76,21 @@ class LogSessionViewModelTest {
         dispatcher.scheduler.advanceUntilIdle()
 
         assertEquals(12.5, repository.loggedKm)
-        assertTrue(viewModel.uiState.value.syncWarning != null)
+        assertEquals(null, viewModel.uiState.value.error)
+    }
+
+    @Test
+    fun `submit sets error when logSession fails`() = runTest {
+        val repository = FakeCyclingRepository(
+            loggableSessions = listOf(sampleSession),
+            logResult = Result.failure(RuntimeException("db error"))
+        )
+        val viewModel = LogSessionViewModel(repository)
+        dispatcher.scheduler.advanceUntilIdle()
+
+        viewModel.submit(sampleSession, 12.5, "media")
+        dispatcher.scheduler.advanceUntilIdle()
+
+        assertTrue(viewModel.uiState.value.error != null)
     }
 }

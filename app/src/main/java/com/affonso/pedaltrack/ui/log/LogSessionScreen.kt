@@ -31,7 +31,6 @@ import java.time.format.DateTimeFormatter
 fun LogSessionScreen(
     uiState: LogSessionUiState,
     onSubmit: (HealthConnectSession, Double, String?) -> Unit,
-    onDismissWarning: () -> Unit = {},
     onDismissError: () -> Unit = {}
 ) {
     var selected by remember { mutableStateOf<HealthConnectSession?>(null) }
@@ -69,14 +68,6 @@ fun LogSessionScreen(
                     modifier = Modifier.padding(12.dp),
                     color = MaterialTheme.colorScheme.error
                 )
-            }
-        }
-        uiState.syncWarning?.let { warning ->
-            Card(
-                modifier = Modifier.fillMaxWidth().padding(16.dp, 16.dp, 16.dp, 0.dp),
-                onClick = onDismissWarning
-            ) {
-                Text("$warning (toque para dispensar)", modifier = Modifier.padding(12.dp))
             }
         }
 

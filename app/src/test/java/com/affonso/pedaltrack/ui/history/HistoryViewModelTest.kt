@@ -5,7 +5,6 @@ import com.affonso.pedaltrack.domain.HealthConnectSession
 import com.affonso.pedaltrack.domain.SummaryMetrics
 import com.affonso.pedaltrack.domain.SummaryPeriod
 import com.affonso.pedaltrack.repository.CyclingRepository
-import com.affonso.pedaltrack.repository.LogResult
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
@@ -28,8 +27,8 @@ private class FakeCyclingRepository(
     var updatedKm: Double? = null
 
     override suspend fun getLoggableSessions(): List<HealthConnectSession> = emptyList()
-    override suspend fun logSession(session: HealthConnectSession, km: Double, carga: String?): Result<LogResult> =
-        Result.success(LogResult(true))
+    override suspend fun logSession(session: HealthConnectSession, km: Double, carga: String?): Result<Unit> =
+        Result.success(Unit)
     override fun observeHistory(): Flow<List<CyclingSessionRecord>> = history
     override suspend fun updateSession(id: Long, km: Double, carga: String?) { updatedKm = km }
     override suspend fun deleteSession(id: Long) { deletedId = id }

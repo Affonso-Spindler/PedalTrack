@@ -1,8 +1,8 @@
 package com.affonso.pedaltrack.repository
 
-import com.affonso.pedaltrack.data.healthconnect.HealthConnectManager
 import com.affonso.pedaltrack.data.local.CyclingSessionDao
 import com.affonso.pedaltrack.data.local.CyclingSessionEntity
+import com.affonso.pedaltrack.data.samsunghealth.HealthConnectManager
 import com.affonso.pedaltrack.domain.CyclingSessionRecord
 import com.affonso.pedaltrack.domain.HealthConnectSession
 import com.affonso.pedaltrack.domain.SessionFilter
@@ -15,11 +15,9 @@ import java.time.Instant
 import java.time.ZoneId
 import java.time.temporal.ChronoUnit
 
-data class LogResult(val healthConnectSynced: Boolean)
-
 interface CyclingRepository {
     suspend fun getLoggableSessions(): List<HealthConnectSession>
-    suspend fun logSession(session: HealthConnectSession, km: Double, carga: String?): Result<LogResult>
+    suspend fun logSession(session: HealthConnectSession, km: Double, carga: String?): Result<Unit>
     fun observeHistory(): Flow<List<CyclingSessionRecord>>
     suspend fun updateSession(id: Long, km: Double, carga: String?)
     suspend fun deleteSession(id: Long)
@@ -38,7 +36,7 @@ class CyclingRepositoryImpl(
         return SessionFilter.loggable(hcSessions, loggedIds)
     }
 
-    override suspend fun logSession(session: HealthConnectSession, km: Double, carga: String?): Result<LogResult> {
+    override suspend fun logSession(session: HealthConnectSession, km: Double, carga: String?): Result<Unit> =
         try {
             dao.insert(
                 CyclingSessionEntity(
@@ -53,12 +51,10 @@ class CyclingRepositoryImpl(
                     createdAt = Instant.now()
                 )
             )
+            Result.success(Unit)
         } catch (e: Exception) {
-            return Result.failure(e)
+            Result.failure(e)
         }
-        val syncResult = healthConnectManager.writeDistanceRecord(session.startTime, session.endTime, km)
-        return Result.success(LogResult(healthConnectSynced = syncResult.isSuccess))
-    }
 
     override fun observeHistory(): Flow<List<CyclingSessionRecord>> =
         dao.observeAll().map { entities -> entities.map { it.toDomain() } }

@@ -12,8 +12,7 @@ import kotlinx.coroutines.launch
 data class LogSessionUiState(
     val loading: Boolean = true,
     val loggableSessions: List<HealthConnectSession> = emptyList(),
-    val error: String? = null,
-    val syncWarning: String? = null
+    val error: String? = null
 )
 
 class LogSessionViewModel(private val repository: CyclingRepository) : ViewModel() {
@@ -39,20 +38,9 @@ class LogSessionViewModel(private val repository: CyclingRepository) : ViewModel
     fun submit(session: HealthConnectSession, km: Double, carga: String?) {
         viewModelScope.launch {
             repository.logSession(session, km, carga)
-                .onSuccess { logResult ->
-                    _uiState.value = _uiState.value.copy(
-                        syncWarning = if (!logResult.healthConnectSynced)
-                            "Salvo localmente, mas não sincronizou com o Health Connect"
-                        else null
-                    )
-                    loadSessions()
-                }
+                .onSuccess { loadSessions() }
                 .onFailure { e -> _uiState.value = _uiState.value.copy(error = e.message) }
         }
-    }
-
-    fun dismissWarning() {
-        _uiState.value = _uiState.value.copy(syncWarning = null)
     }
 
     fun dismissError() {

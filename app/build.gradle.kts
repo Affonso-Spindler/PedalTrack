@@ -2,6 +2,7 @@ plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
     id("org.jetbrains.kotlin.plugin.compose")
+    id("org.jetbrains.kotlin.plugin.parcelize")
     id("com.google.devtools.ksp")
 }
 
@@ -11,7 +12,8 @@ android {
 
     defaultConfig {
         applicationId = "com.affonso.pedaltrack"
-        minSdk = 26
+        // Samsung Health Data SDK requires minSdk 29 (its own manifest declares this floor).
+        minSdk = 29
         targetSdk = 34
         versionCode = 1
         versionName = "1.0"
@@ -59,7 +61,11 @@ dependencies {
     implementation("androidx.room:room-ktx:2.6.1")
     ksp("androidx.room:room-compiler:2.6.1")
 
-    implementation("androidx.health.connect:connect-client:1.1.0-alpha07")
+    // Samsung Health Data SDK: read exercise sessions directly from the Samsung Health app.
+    // Not published to Maven Central — the .aar is downloaded manually from
+    // developer.samsung.com/health/data and vendored at app/libs/.
+    implementation(files("libs/samsung-health-data-api-1.1.0.aar"))
+    implementation("com.google.code.gson:gson:2.13.2")
 
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.8.1")
 

@@ -88,7 +88,6 @@ fun PedalTrackNavHost(repository: CyclingRepository) {
                 LogSessionScreen(
                     uiState = uiState,
                     onSubmit = viewModel::submit,
-                    onDismissWarning = viewModel::dismissWarning,
                     onDismissError = viewModel::dismissError
                 )
             }
