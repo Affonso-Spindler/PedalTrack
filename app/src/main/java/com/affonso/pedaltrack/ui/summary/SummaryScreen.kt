@@ -1,7 +1,6 @@
 package com.affonso.pedaltrack.ui.summary
 
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -32,14 +31,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.affonso.pedaltrack.domain.SummaryPeriod
-import com.affonso.pedaltrack.ui.theme.PedalPrimary
-import com.affonso.pedaltrack.ui.theme.PedalSecondary
 
 private val periodOptions = listOf(
     SummaryPeriod.WEEK to "Semana",
@@ -107,15 +103,16 @@ fun SummaryScreen(
         }
 
         Row(Modifier.padding(top = 12.dp), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-            GradientStatCard(
+            StatCard(
                 value = "%.1f".format(uiState.metrics.totalKm),
                 label = "km no período",
+                valueColor = MaterialTheme.colorScheme.primary,
                 modifier = Modifier.weight(1f)
             )
             StatCard(
                 value = uiState.metrics.sessionCount.toString(),
                 label = "sessões",
-                valueColor = MaterialTheme.colorScheme.primary,
+                valueColor = MaterialTheme.colorScheme.secondary,
                 modifier = Modifier.weight(1f)
             )
             StatCard(
@@ -127,15 +124,15 @@ fun SummaryScreen(
         }
         Row(Modifier.padding(top = 10.dp), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
             StatCard(
-                value = "%.0f".format(uiState.metrics.avgDurationMin),
-                label = "min médio",
-                valueColor = MaterialTheme.colorScheme.secondary,
-                modifier = Modifier.weight(1f)
-            )
-            StatCard(
                 value = "%.1f".format(uiState.metrics.avgKmPerSession),
                 label = "km médio",
                 valueColor = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.weight(1f)
+            )
+            StatCard(
+                value = "%.0f".format(uiState.metrics.avgDurationMin),
+                label = "min médio",
+                valueColor = MaterialTheme.colorScheme.secondary,
                 modifier = Modifier.weight(1f)
             )
             StatCard(
@@ -175,21 +172,6 @@ fun SummaryScreen(
                 }
             }
         }
-    }
-}
-
-@Composable
-private fun GradientStatCard(value: String, label: String, modifier: Modifier = Modifier) {
-    Column(
-        modifier
-            .background(
-                Brush.linearGradient(listOf(PedalPrimary, PedalSecondary)),
-                RoundedCornerShape(14.dp)
-            )
-            .padding(16.dp)
-    ) {
-        Text(value, fontSize = 24.sp, fontWeight = FontWeight.Bold, color = Color.White)
-        Text(label, fontSize = 12.sp, color = Color.White.copy(alpha = 0.9f))
     }
 }
 
